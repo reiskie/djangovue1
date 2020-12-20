@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+   <meta charset="utf-8">
+   <title>test</title>
+
+   <script src="/frontend/vue.min.js"></script>
+   <script src="/frontend/axios.min.js"></script>
+   <script src="/frontend/echarts.min.js"></script>
+
+   <style>
+      table tr td{
+          border:1px solid gray;
+      }
+      table{
+          border-collapse:collapse;
+          width:300px;
+      }
+      tr.firstLine{
+          background-color: lightGray;
+      }
+   </style>
+
+</head>
+
+<body>
+
+ <div id="app" >
+   {% verbatim %}
+
+   <button v-on:click="refresh">manual refresh</button>
+   <button v-on:click="switchAuto">{{flagAuto}}</button>
+   <button v-on:click="switchTest">{{flagTest}}</button>
+   <br>
+   <div id="main" style="width:80%;height:400px"></div>
+   <br>
+   Data returned from api:  {{ string_from_api }}
+   <br><br>
+   <table align="center" >
+       <tr class="firstLine">
+           <td>seq</td>
+           <td>book name</td>
+           <td>add time</td>
+           <td>price</td>
+           <td>stocks</td>
+           <td>sold</td>
+       </tr>
+   
+       <tr v-for="book in books">
+           <td>{{book.pk}}</td>
+           <td>{{book.fields.book_name}}</td>
+           <td>{{book.fields.add_time}}</td>
+           <td>{{book.fields.price}}</td>
+           <td>{{book.fields.stocks}}</td>
+           <td>{{book.fields.sold}}</td>
+       </tr>
+   </table>
+   
+   {% endverbatim %}
+   
+  
+ </div>
+</body>
+ 
+<script type="text/javascript">
+    
+ var app = new Vue({
+
+   el: '#app',
+    
+   data: {
+    
+       myChart:"",
+       
+       option1:{       
+
+            title: {
+                text: 'data volume'
+            },
+            tooltip: {},
+            legend: {
+                data:['volume']
+            },
+            xAxis: {
+                data: ["","","","","","","","","",""]
+            },
+            yAxis: {},
+            series: [{
+                name: 'volume',
+                type: 'line',
+                smooth: true,
+                data: [0,0,0,0,0,0,0,0,0,0]
+            }]
+        },
+        
+        inter:"",
+
+        flagAuto: "auto",
+        flagTest: "random data",
+
+        string_from_api:'default content',
+        books:[{pk:1, model:'book', fields:'alll'},{pk:2, model:'book', fields:'bbbl'}],
+
+   },
+   
+   watch: {
+      option1: {
+        handler(newVal, oldVal) {
+          if (this.myChart) {
+            if (newVal) {
+              this.myChart.setOption(newVal);
+            } else {
+              this.myChart.setOption(oldVal);
+            }
+          } else {
+            this.init();
+          }
+        },
+        deep: true 
+      }
+    },
+    
+   mounted () {
+        this.init()
+   },
+   
+   
+   methods:{
+    
+       init(){
+            this.myChart = echarts.init(document.getElementById('main'))
+            this.myChart.setOption(this.option1, true)
+            window.addEventListener("resize", this.myChart.resize)
+            this.inter=self.setInterval(this.refresh,2000)
+       },
+       
+       switchAuto: function(){
+            if(this.flagAuto=="auto"){
+               this.flagAuto="manual"
+               this.inter=window.clearInterval(this.inter)
+            }else{
+               this.flagAuto="auto"
+               this.inter=self.setInterval(this.refresh,2000)
+            };
+       },
+           
+       switchTest: function(){
+            if(this.flagTest=="random data"){
+               this.flagTest="http api"
+            }else{
+               this.flagTest="random data"
+            };
+       },
+       
+       refresh: function(){
+            let d=new Date();
+            let t=d.toLocaleTimeString();
+            //this.option1.title.text = t;
+            
+            this.option1.xAxis.data.shift()
+            this.option1.series[0].data.shift()
+
+            if (this.flagTest =="random data"){
+                this.option1.xAxis.data.push(d.getMinutes()+":"+d.getSeconds())
+                this.option1.series[0].data.push(Math.floor(Math.random()*60))
+            }else{
+                axios
+                .get('show_books')
+                .then(response => {
+                    let data1=response.data
+                    let list1=data1.list
+
+                    let x = Math.floor(Math.random()*list1.length)
+                    this.option1.xAxis.data.push(list1[x].fields.book_name)
+                    this.option1.series[0].data.push(list1[x].fields.sold)
+
+                    this.string_from_api = data1
+                    this.books=list1
+
+                   })
+               
+           }
+
+       }
+       
+   }    
+      
+ })
+     
+</script>
+</html>
+
+
+ 
+       
+

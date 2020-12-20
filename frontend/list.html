@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+   <meta charset="utf-8">
+   <title></title>
+   <style>
+      table tr td{
+          border:1px solid gray;
+      }
+      table{
+          border-collapse:collapse;
+          width:300px;
+      }
+      tr.firstLine{
+          background-color: lightGray;
+      }
+   </style>
+</head>
+
+<body>
+
+<div id="app">
+{% verbatim %}
+
+hello: {{ string_from_api }}
+<br>
+<table align="center" >
+    <tr class="firstLine">
+        <td>seq</td>
+        <td>book name</td>
+        <td>add time</td>
+        <td>price</td>
+        <td>stocks</td>
+        <td>sold</td>
+    </tr>
+
+    <tr v-for="book in books">
+        <td>{{book.pk}}</td>
+        <td>{{book.fields.book_name}}</td>
+        <td>{{book.fields.add_time}}</td>
+        <td>{{book.fields.price}}</td>
+        <td>{{book.fields.stocks}}</td>
+        <td>{{book.fields.sold}}</td>
+    </tr>
+
+</table>
+
+<br>
+<h1> {{type1}}, {{type2}}</h1>
+ 
+{% endverbatim %}
+</div>
+
+
+<!--
+<script src="https://cdn.jsdelivr.net/npm/vue@latest/dist/vue.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios@latest/dist/axios.min.js"></script>
+-->
+<script src="/frontend/vue.min.js"></script>
+<script src="/frontend/axios.min.js"></script>
+<script src="/frontend/echarts.min.js"></script>
+<script>
+var app = new Vue({
+
+    el: '#app',
+
+/* 
+    data () {
+        return {
+            string_from_api:'default content',
+            books:[{pk:1, model:'book', fields:"alll"},{pk:2, model:'book', fields:'bbbl'}]
+        }
+    },
+*/
+
+    data: {
+       string_from_api:'default content',
+       books:[{pk:1, model:'book', fields:'alll'},{pk:2, model:'book', fields:'bbbl'}],
+       type1:'',
+       type2:''
+    },
+
+    mounted () {
+      axios
+      .get('show_books')
+      .then(response => { 
+          this.string_from_api = response.data
+          this.books=response.data.list
+          this.type1=typeof response.data
+          this.type2=typeof response.data.list
+         })
+      }  
+
+})
+
+</script>
+
+<div id="main" style="width: 600px;height:400px;"></div>
+<script type="text/javascript">
+    var myChart = echarts.init(document.getElementById('main'));
+
+    var option = {
+        title: {
+            text: 'ECharts title'
+        },
+        tooltip: {},
+        legend: {
+            data:['seri1']
+        },
+        xAxis: {
+            data: ["pen","car","house","ball","music","tool"]
+        },
+        yAxis: {},
+        series: [{
+            name: 'seri1',
+            type: 'bar',
+            data: [5, 20, 36, 10, 10, 20]
+        }]
+    };
+
+    myChart.setOption(option);
+</script>
+
+
+
+</body>
+</html>
+
